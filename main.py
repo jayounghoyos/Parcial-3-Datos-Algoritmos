@@ -1,5 +1,4 @@
-import tkinter as tk
-from tkinter import messagebox
+import threading
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -11,7 +10,7 @@ def load_data(file_path):
 
 def build_graph(data):
     G = nx.Graph()
-    movies = defaultdict(deque)  # Usar deque para almacenar listas enlazadas de actores/directores
+    movies = defaultdict(deque)  # Listas enlazadas para almacenar los actores y directores por película
     
     for _, row in data.iterrows():
         title = row['Series_Title']
@@ -21,11 +20,12 @@ def build_graph(data):
         for star in stars:
             G.add_edge(director, star, title=title)
             movies[title].append(star)
-        movies[title].appendleft(director)
+        movies[title].appendleft(director)  # Añadir el director al frente de la lista enlazada
 
     return G, movies
 
 def bfs_shortest_path(graph, start, goal):
+    # Búsqueda en amplitud para encontrar el camino más corto
     explored = set()
     queue = deque([[start]])
     
@@ -36,36 +36,29 @@ def bfs_shortest_path(graph, start, goal):
         if node == goal:
             return path
         
-        elif node not in explored:
+        if node not in explored:
             explored.add(node)
-            neighbours = graph[node]
-            for neighbour in neighbours:
+            for neighbour in graph[node]:
                 new_path = list(path)
                 new_path.append(neighbour)
                 queue.append(new_path)
 
     return None
 
-def dfs_paths(graph, start, visited=None, path=None):
+def dfs_paths(graph, start, path=None, visited=None):
     if visited is None:
         visited = set()
     if path is None:
-        path = []
-
+        path = [start]
+    
     visited.add(start)
-    path.append(start)
-    paths = [path.copy()]  # Crear una copia para evitar referencias cruzadas
-
+    paths = [path[:]]
     for neighbor in graph[start]:
         if neighbor not in visited:
-            paths.extend(dfs_paths(graph, neighbor, visited.copy(), path.copy()))
-
-    path.pop()  # Quitar el nodo actual al retroceder
+            path.append(neighbor)
+            paths.extend(dfs_paths(graph, neighbor, path, visited))
+            path.pop()
     return paths
-
-def salir():
-    if messagebox.askokcancel("Salir", "¿Quieres salir del programa?"):
-        root.destroy()
 
 def visualize_graph(graph):
     pos = nx.circular_layout(graph)
@@ -73,23 +66,26 @@ def visualize_graph(graph):
     plt.title("Collaboration Graph")
     plt.show()
 
+def listen_for_exit():
+    input_text = input("Press 'q' to exit the program: ")
+    if input_text.lower() == 'q':
+        print("Exiting the program...")
+        exit()
+
 # Main execution
 file_path = 'formated.csv'
 data = load_data(file_path)
 graph, movies = build_graph(data)
 
-visualize_graph(graph)  # Visualize the graph
+# Visualizing the graph
+visualize_graph(graph)
 
-# Example usage of BFS and DFS
-start_actor = 'Actor1'
+# Start listening for exit command in a separate thread
+exit_thread = threading.Thread(target=listen_for_exit)
+exit_thread.start()
+
+# Example of using BFS and DFS
+start_actor = 'Actor1'  # Adjust these names based on your data
 end_actor = 'Actor2'
 print("BFS shortest path:", bfs_shortest_path(graph, start_actor, end_actor))
 print("DFS paths:", dfs_paths(graph, start_actor))
-
-root = tk.Tk()
-root.title("Salir del Programa")
-
-exit_button = tk.Button(root, text="Salir", command=salir, height=2, width=10)
-exit_button.pack(pady=20)
-
-root.mainloop()
