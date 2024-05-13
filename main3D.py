@@ -3,7 +3,7 @@ import networkx as nx
 from collections import defaultdict
 import plotly.graph_objects as go
 
-def load_data(file_path, num_rows=100):
+def load_data(file_path, num_rows):
     df = pd.read_csv(file_path, nrows=num_rows)
     return df[['Series_Title', 'Director', 'Star1', 'Star2', 'Star3', 'Star4']]
 
@@ -25,15 +25,17 @@ def build_graph(data):
 
 def visualize_graph_3d(graph):
     pos = nx.spring_layout(graph, dim=3, seed=42)
-    edge_x, edge_y, edge_z = [], [], []
+    edge_x, edge_y, edge_z, hover_text = [], [], [], []
     for edge in graph.edges(data=True):
         x0, y0, z0 = pos[edge[0]]
         x1, y1, z1 = pos[edge[1]]
         edge_x.extend([x0, x1, None])
         edge_y.extend([y0, y1, None])
         edge_z.extend([z0, z1, None])
+        # Añadiendo el título de la película como información en hover
+        hover_text.extend([edge[2]['title'], edge[2]['title'], None])
 
-    edge_trace = go.Scatter3d(x=edge_x, y=edge_y, z=edge_z, line=dict(width=2, color='grey'), hoverinfo='none', mode='lines')
+    edge_trace = go.Scatter3d(x=edge_x, y=edge_y, z=edge_z, line=dict(width=2, color='grey'), hoverinfo='text', hovertext=hover_text, mode='lines')
 
     node_x, node_y, node_z, text = [], [], [], []
     for node, (x, y, z) in pos.items():
@@ -49,8 +51,8 @@ def visualize_graph_3d(graph):
 
 # Main execution
 #numero de filas usadas
-num_rows = 20
+num_rows = 1001
 file_path = 'formated.csv'
-data = load_data(file_path,num_rows)
+data = load_data(file_path, num_rows)
 graph, movies = build_graph(data)
 visualize_graph_3d(graph)  # Visualize the graph in 3D
