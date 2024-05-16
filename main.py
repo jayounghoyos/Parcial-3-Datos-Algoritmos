@@ -24,7 +24,7 @@ class LinkedList:
     def prepend(self, value):
         new_head = Node(value)
         new_head.next = self.head
-        self.head = new_head
+        self.head = new_head 
     
     def to_list(self):
         result = []
