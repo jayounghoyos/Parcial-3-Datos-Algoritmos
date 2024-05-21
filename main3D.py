@@ -51,7 +51,7 @@ def visualize_graph_3d(graph):
 
 # Main execution
 #numero de filas usadas
-num_rows = 1001
+num_rows = 20
 file_path = 'formated.csv'
 data = load_data(file_path, num_rows)
 graph, movies = build_graph(data)
