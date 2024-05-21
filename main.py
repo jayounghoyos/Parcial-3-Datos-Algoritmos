@@ -34,8 +34,8 @@ class LinkedList:
             current = current.next
         return result
 
-def load_data(file_path):
-    df = pd.read_csv(file_path)
+def load_data(file_path, num_movies=None):
+    df = pd.read_csv(file_path, nrows=num_movies)  # Limitamos el número de filas leídas
     return df[['Series_Title', 'Director', 'Star1', 'Star2', 'Star3', 'Star4']]
 
 def build_graph(data):
@@ -105,7 +105,8 @@ def visualize_graph(graph):
 if __name__ == '__main__':
     # Main execution
     file_path = 'formated.csv'
-    data = load_data(file_path)
+    num_movies = 50
+    data = load_data(file_path,num_movies)
     graph, movies = build_graph(data)
 
     # Visualizing the graph
@@ -115,4 +116,5 @@ if __name__ == '__main__':
     start_actor = 'Morgan Freeman'  
     end_actor = 'Al Pacino'
     print("BFS shortest path:", bfs_shortest_path(graph, start_actor, end_actor))
+    print("*"*30)
     print("DFS paths:", dfs_paths(graph, start_actor))
